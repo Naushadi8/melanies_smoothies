@@ -1,7 +1,6 @@
 import streamlit as st
 from snowflake.snowpark.functions import col
 import requests
-import pandas as pd
 
 # Use Streamlit Snowflake connection
 cnx = st.connection("snowflake")
@@ -33,9 +32,20 @@ ingredients_list = st.multiselect(
     max_selections=5
 )
 
-# Submit order section
 if ingredients_list:
-    ingredients_string = " ".join(ingredients_list)
+    ingredients_string = ""
+
+    for fruit_chosen in ingredients_list:
+        ingredients_string += fruit_chosen + " "
+
+        smoothiefroot_response = requests.get(
+            "https://my.smoothiefroot.com/api/fruit/watermelon"
+        )
+
+        sf_df = st.dataframe(
+            data=smoothiefroot_response.json(),
+            use_container_width=True
+        )
 
     st.write("Selected ingredients:", ingredients_string)
 
@@ -53,42 +63,3 @@ if ingredients_list:
         session.sql(my_insert_stmt).collect()
 
         st.success("Your Smoothie is ordered!", icon="✅")
-
-
-# New section to display smoothiefroot nutrition information
-smoothiefroot_response = requests.get(
-    "https://my.smoothiefroot.com/api/fruit/watermelon"
-)
-
-smoothiefroot_json = smoothiefroot_response.json()
-
-# The API may return either "nutrition" or "nutritions"
-nutrition_data = (
-    smoothiefroot_json.get("nutrition")
-    or smoothiefroot_json.get("nutritions")
-    or {}
-)
-
-# Build the nutrition table
-nutrition_rows = []
-
-for nutrient, value in nutrition_data.items():
-    nutrition_rows.append(
-        {
-            "": nutrient,
-            "family": smoothiefroot_json.get("family"),
-            "genus": smoothiefroot_json.get("genus"),
-            "id": smoothiefroot_json.get("id"),
-            "name": smoothiefroot_json.get("name"),
-            "nutrition": value,
-            "order": smoothiefroot_json.get("order"),
-        }
-    )
-
-nutrition_df = pd.DataFrame(nutrition_rows)
-
-if not nutrition_df.empty:
-    nutrition_df = nutrition_df.set_index("")
-    st.dataframe(nutrition_df, use_container_width=True)
-else:
-    st.warning("No nutrition data found from the SmoothieFroot API.")
