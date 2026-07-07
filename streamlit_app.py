@@ -1,14 +1,15 @@
 import streamlit as st
 from snowflake.snowpark.functions import col
-import requests
 
-# Use Streamlit connection only
+# Use Streamlit Snowflake connection
 cnx = st.connection("snowflake")
 session = cnx.session()
 
+# App title
 st.title("My Parents New Healthy Diner")
 st.write("Choose the fruits you want in your custom Smoothie!")
 
+# Customer name input
 name_on_order = st.text_input("Name on Smoothie:")
 st.write("The name on your Smoothie will be:", name_on_order)
 
@@ -19,12 +20,16 @@ my_dataframe = (
     .select(col("FRUIT_NAME"))
 )
 
-# Convert Snowflake dataframe to pandas/list for Streamlit multiselect
+# Convert Snowflake dataframe to pandas
 fruit_df = my_dataframe.to_pandas()
+
+# Convert fruit column to a normal Python list
 fruit_options = fruit_df["FRUIT_NAME"].tolist()
 
+# Display fruit options
 st.dataframe(fruit_df, use_container_width=True)
 
+# Multiselect fruit ingredients
 ingredients_list = st.multiselect(
     "Choose up to 5 ingredients:",
     fruit_options,
@@ -48,11 +53,8 @@ if ingredients_list:
 
         st.success("Your Smoothie is ordered!", icon="✅")
 
-# Call SmoothieFroot API
-smoothiefroot_response = requests.get(
-    "https://my.smoothiefroot.com/api/fruit/watermelon"
-)
 
-st.write("SmoothieFroot API response:")
-#st.json(smoothiefroot_response.json())
-st_df = st.dataframe(data=smoothiefrot_response.json(), use_container_wqidth=True)
+# New section to display smoothiefroot nutrition information
+import requests
+smoothiefroot_response = requests.get("https://my.smoothiefroot.com/api/fruit/watermelon")
+st.text(smoothiefroot_response.json())
