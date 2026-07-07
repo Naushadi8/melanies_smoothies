@@ -54,4 +54,5 @@ smoothiefroot_response = requests.get(
 )
 
 st.write("SmoothieFroot API response:")
-st.json(smoothiefroot_response.json())
+#st.json(smoothiefroot_response.json())
+st_df = st.dataframe(data=smoothiefrot_response.json(), use_container_wqidth=True)
